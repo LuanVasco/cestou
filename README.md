@@ -15,8 +15,10 @@ O MVP inclui três telas responsivas, salvamento automático com Zustand e local
 Use Node.js 22.12 ou superior dentro da linha 22.x. O arquivo `.nvmrc` aponta para a versão utilizada no desenvolvimento e a publicação usa a mesma linha principal.
 
 ```bash
+git clone https://github.com/LuanVasco/cestou.git
+cd cestou
 nvm use
-npm install
+npm ci
 npm run dev
 ```
 
@@ -131,14 +133,30 @@ Validação com pessoas usando o app durante compras reais e cobertura em outros
 
 O projeto `cestou` está publicado em produção no espaço `luanvascos-projects`, em [https://cestou-eta.vercel.app](https://cestou-eta.vercel.app).
 
+### Deploy automático pelo GitHub
+
+O repositório público [LuanVasco/cestou](https://github.com/LuanVasco/cestou) está conectado diretamente ao projeto existente na Vercel. A branch de produção é `main`.
+
+Cada push ou merge na `main` inicia um novo build na Vercel. Quando o build termina com sucesso, a versão é publicada no mesmo endereço `https://cestou-eta.vercel.app`.
+
+```bash
+git add .
+git commit -m "Descreva a atualização"
+git push origin main
+```
+
+O andamento do deploy aparece nos checks do commit no GitHub e na aba Deployments do projeto na Vercel. A integração usa o acesso já concedido ao aplicativo da Vercel no GitHub; não é necessário colocar tokens no repositório nem criar um workflow com segredos.
+
+### Configuração da publicação
+
 O arquivo `vercel.json` configura o preset Vite, a instalação com `npm ci`, o build com `npm run build` e a pasta de saída `dist/`. O Node.js fica fixado na linha 22.x pelo `package.json`. As rotas por hash permitem abrir as três telas sem regras extras de redirecionamento.
 
 A `.vercelignore` exclui dependências locais, builds, capturas de documentação, relatórios de teste e arquivos de ambiente do envio. O vínculo local com a conta e o projeto fica em `.vercel/`, ignorado pelo Git.
 
-Para uma nova publicação, autentique a conta desejada na CLI da Vercel, vincule o diretório ao projeto Cestou e execute:
+Para uma publicação manual, autentique a conta `luanvasco` na CLI da Vercel, vincule o diretório ao projeto Cestou e execute:
 
 ```bash
-vercel --prod
+vercel --prod --scope luanvascos-projects
 ```
 
 Para executar a mesma suíte de interface contra a versão online, com dados isolados de teste:
