@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import type { GroceryCategory, GroceryItem } from '../types'
 import { formatMoney, parseMoney } from '../lib/money'
 import { Icon } from './Icon'
+import { listTemplates, type ProductDraft } from '../lib/quickList'
 
 interface FormActions {
   onCancel: () => void
@@ -29,7 +30,9 @@ function ErrorMessage({ message }: { message: string }) {
 export function ListForm({
   onCancel,
   onSave,
-}: FormActions & { onSave: (name: string, budget: number) => void }) {
+}: FormActions & {
+  onSave: (name: string, budget: number, items: ProductDraft[]) => void
+}) {
   const [error, setError] = useState('')
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -39,10 +42,31 @@ export function ListForm({
     if (!name) return setError('Dê um nome para sua lista.')
     if (budget === null || budget <= 0)
       return setError('Informe um orçamento maior que zero, como 250,00.')
-    onSave(name, budget)
+    onSave(
+      name,
+      budget,
+      listTemplates.find((template) => template.id === data.get('template'))
+        ?.items ?? [],
+    )
   }
   return (
     <form className="form" onSubmit={submit}>
+      <label htmlFor="list-template">
+        Começar com
+        <select id="list-template" name="template" defaultValue="empty">
+          <option value="empty">Lista vazia</option>
+          {listTemplates.map((template) => (
+            <option key={template.id} value={template.id}>
+              {template.emoji} {template.name} · {template.items.length}{' '}
+              produtos
+            </option>
+          ))}
+        </select>
+        <small>
+          Modelos editáveis, sem preços sugeridos. Escolha o que faz sentido
+          para você.
+        </small>
+      </label>
       <label htmlFor="list-name">
         Nome da lista
         <input

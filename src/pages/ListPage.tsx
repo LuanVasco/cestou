@@ -1,10 +1,14 @@
 import { useState } from 'react'
 import type { GroceryItem, ShoppingList } from '../types'
 import { formatMoney, getTotals } from '../lib/money'
+import { productKey } from '../lib/quickList'
 import { Icon } from '../components/Icon'
 
 interface Props {
   list: ShoppingList
+  favorites: GroceryItem[]
+  onToggleFavorite: (item: GroceryItem) => void
+  onQuickAdd: () => void
   onAdd: () => void
   onEdit: (item: GroceryItem) => void
   onPurchase: (item: GroceryItem) => void
@@ -16,6 +20,9 @@ interface Props {
 
 export function ListPage({
   list,
+  favorites,
+  onToggleFavorite,
+  onQuickAdd,
   onAdd,
   onEdit,
   onPurchase,
@@ -66,6 +73,19 @@ export function ListPage({
           </button>
         </div>
       </div>
+      <section
+        className="quick-start-banner"
+        aria-label="Preencher lista rapidamente"
+      >
+        <div>
+          <strong>Menos digitação, mais tempo para você.</strong>
+          <p>Cole vários produtos de uma vez ou escolha seus favoritos.</p>
+        </div>
+        <button className="button button-secondary" onClick={onQuickAdd}>
+          <Icon name="Sparkles" size={17} />
+          Preencher rápido
+        </button>
+      </section>
       <div className="shopping-layout">
         <section className="shopping-items" aria-labelledby="items-title">
           <div className="shopping-progress">
@@ -174,6 +194,17 @@ export function ListPage({
                           </span>
                         </div>
                         <div className="item-actions">
+                          <button
+                            className="icon-button favorite-button"
+                            aria-label={`Favoritar ${item.name}`}
+                            aria-pressed={favorites.some(
+                              (favorite) =>
+                                productKey(favorite) === productKey(item),
+                            )}
+                            onClick={() => onToggleFavorite(item)}
+                          >
+                            <Icon name="Star" size={15} />
+                          </button>
                           <button
                             className="icon-button"
                             aria-label={`Editar ${item.name}`}

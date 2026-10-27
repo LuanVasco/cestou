@@ -6,7 +6,13 @@ import { formatDate, formatMoney, getTotals } from '../lib/money'
 import { Icon } from '../components/Icon'
 import { MarketIllustration } from '../components/MarketIllustration'
 
-function ListCard({ list }: { list: ShoppingList }) {
+function ListCard({
+  list,
+  onReuse,
+}: {
+  list: ShoppingList
+  onReuse: (list: ShoppingList) => void
+}) {
   const totals = getTotals(list)
   const isCompleted = list.status === 'completed'
   return (
@@ -53,6 +59,15 @@ function ListCard({ list }: { list: ShoppingList }) {
           <Icon name="ArrowUpRight" size={21} />
         </a>
       </div>
+      {isCompleted && (
+        <button
+          className="text-link repeat-purchase"
+          onClick={() => onReuse(list)}
+        >
+          <Icon name="Copy" size={15} />
+          Repetir compra
+        </button>
+      )}
       <span className="card-date">
         <Icon name="CalendarDays" size={13} />
         {isCompleted ? 'Finalizada em' : 'Criada em'} {formatDate(list.date)}
@@ -65,10 +80,12 @@ export function HomePage({
   lists,
   storageIssue,
   onCreate,
+  onReuse,
   onAbout,
 }: {
   lists: ShoppingList[]
   storageIssue: StorageIssue
+  onReuse: (list: ShoppingList) => void
   onCreate: () => void
   onAbout: () => void
 }) {
@@ -198,7 +215,7 @@ export function HomePage({
         </div>
         <div className="lists-grid">
           {visible.map((list) => (
-            <ListCard key={list.id} list={list} />
+            <ListCard key={list.id} list={list} onReuse={onReuse} />
           ))}
           <button className="new-list-card" onClick={onCreate}>
             <span className="new-list-plus">

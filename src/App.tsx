@@ -14,20 +14,15 @@ import { SummaryPage } from './pages/SummaryPage'
 import { useShoppingStore } from './store/useShoppingStore'
 import { navigate, useRoute } from './hooks/useRoute'
 import { formatMoney, getTotals } from './lib/money'
-import type { GroceryCategory, GroceryItem, ShoppingList } from './types'
+import { QuickAddForm } from './components/QuickAddForm'
+import { categoryEmoji, freshItem } from './lib/quickList'
+import type { GroceryItem, ShoppingList } from './types'
 
 type ActiveDialog =
   | { type: 'create' | 'about' }
-  | { type: 'add' | 'budget' | 'finish'; listId: string }
+  | { type: 'add' | 'quick' | 'budget' | 'finish'; listId: string }
   | { type: 'edit' | 'purchase'; listId: string; item: GroceryItem }
 
-const categoryEmoji: Record<GroceryCategory, string> = {
-  Hortifruti: '🥑',
-  Mercearia: '🛒',
-  Laticínios: '🥛',
-  Padaria: '🥖',
-  Limpeza: '🧴',
-}
 const today = () =>
   new Intl.DateTimeFormat('en-CA', {
     timeZone: 'America/Sao_Paulo',
@@ -38,6 +33,8 @@ const today = () =>
 
 export default function App() {
   const lists = useShoppingStore((state) => state.lists)
+  const favorites = useShoppingStore((state) => state.favorites)
+  const toggleFavorite = useShoppingStore((state) => state.toggleFavorite)
   const addList = useShoppingStore((state) => state.addList)
   const updateList = useShoppingStore((state) => state.updateList)
   const storageIssue = useShoppingStore((state) => state.storageIssue)
@@ -121,6 +118,7 @@ export default function App() {
         <HomePage
           lists={lists}
           storageIssue={storageIssue}
+          onReuse={duplicate}
           onCreate={() => setDialog({ type: 'create' })}
           onAbout={() => setDialog({ type: 'about' })}
         />
@@ -141,6 +139,9 @@ export default function App() {
         <ListPage
           key={selected.id}
           list={selected}
+          favorites={favorites}
+          onToggleFavorite={toggleFavorite}
+          onQuickAdd={() => setDialog({ type: 'quick', listId: selected.id })}
           onAdd={() => setDialog({ type: 'add', listId: selected.id })}
           onEdit={(item) =>
             setDialog({ type: 'edit', listId: selected.id, item })
@@ -174,7 +175,7 @@ export default function App() {
         >
           <ListForm
             onCancel={closeDialog}
-            onSave={(name, budgetCents) => {
+            onSave={(name, budgetCents, items) => {
               const list: ShoppingList = {
                 id: crypto.randomUUID(),
                 name,
@@ -184,12 +185,16 @@ export default function App() {
                 color: 'green',
                 status: 'active',
                 date: today(),
-                items: [],
+                items: items.map(freshItem),
               }
               addList(list)
               closeDialog()
               navigate(`/lista/${list.id}`)
-              notify('Lista criada. Vamos ao primeiro item?')
+              notify(
+                items.length
+                  ? 'Lista criada. Ajuste os produtos do modelo como preferir.'
+                  : 'Lista criada. Vamos ao primeiro item?',
+              )
             }}
           />
         </Modal>
@@ -226,6 +231,27 @@ export default function App() {
               <Icon name="ArrowRight" size={17} />
             </button>
           </div>
+        </Modal>
+      )}
+      {dialog?.type === 'quick' && dialogList && (
+        <Modal
+          title="Sua lista, mais rápido"
+          description="Inclua vários produtos ou reutilize seus favoritos."
+          onClose={closeDialog}
+        >
+          <QuickAddForm
+            favorites={favorites}
+            existing={dialogList.items}
+            onCancel={closeDialog}
+            onSave={(items) => {
+              updateList(dialogList.id, (current) => ({
+                ...current,
+                items: [...current.items, ...items.map(freshItem)],
+              }))
+              closeDialog()
+              notify(`${items.length} produtos adicionados à lista.`)
+            }}
+          />
         </Modal>
       )}
       {(dialog?.type === 'add' || dialog?.type === 'edit') && dialogList && (

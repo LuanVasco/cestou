@@ -37,7 +37,7 @@ describe('salvamento das compras', () => {
     const storage = memoryStorage()
     const first = createShoppingStore(() => storage)
     expect(JSON.parse(storage.getItem(STORAGE_KEY)!)).toEqual({
-      state: { lists: first.getState().lists },
+      state: { lists: first.getState().lists, favorites: [] },
       version: STORAGE_VERSION,
     })
     const second = createShoppingStore(() => storage)
@@ -138,7 +138,7 @@ describe('salvamento das compras', () => {
     store.getState().addList(personalList())
     expect(
       Object.keys(JSON.parse(storage.getItem(STORAGE_KEY)!).state),
-    ).toEqual(['lists'])
+    ).toEqual(['lists', 'favorites'])
     expect(store.getState().lists[0].id).toBe('pessoal')
   })
 })
@@ -271,5 +271,50 @@ describe('validação dos dados recuperados', () => {
       createShoppingStore(() => memoryStorage(encode(lists))).getState()
         .storageIssue,
     ).toBe('invalid')
+  })
+})
+
+describe('favoritos e compatibilidade', () => {
+  it('abre dados anteriores sem favoritos e preserva todas as listas ao salvar', () => {
+    const storage = memoryStorage(encode())
+    const store = createShoppingStore(() => storage)
+    expect(store.getState().favorites).toEqual([])
+    const item = store.getState().lists[0].items[0]
+    store.getState().toggleFavorite(item)
+    const reopened = createShoppingStore(() => storage).getState()
+    expect(reopened.lists).toEqual(createDemoLists())
+    expect(reopened.favorites).toHaveLength(1)
+    expect(reopened.favorites[0]).toMatchObject({
+      name: item.name,
+      estimatedPriceCents: item.paidPriceCents,
+      purchased: false,
+      paidPriceCents: null,
+    })
+  })
+
+  it('preserva o favorito ao excluir o produto original e permite removê-lo por nome normalizado', () => {
+    const storage = memoryStorage()
+    const store = createShoppingStore(() => storage)
+    const item = store.getState().lists[0].items[0]
+    store.getState().toggleFavorite(item)
+    store.getState().updateList('semana', (list) => ({ ...list, items: [] }))
+    const reopened = createShoppingStore(() => storage)
+    expect(reopened.getState().favorites).toHaveLength(1)
+    reopened
+      .getState()
+      .toggleFavorite({ ...item, id: 'other', name: item.name.toUpperCase() })
+    expect(createShoppingStore(() => storage).getState().favorites).toEqual([])
+  })
+
+  it('preserva dados de favoritos inválidos sem sobrescrever o registro', () => {
+    const raw = JSON.stringify({
+      state: { lists: createDemoLists(), favorites: [{ name: 'inválido' }] },
+      version: STORAGE_VERSION,
+    })
+    const storage = memoryStorage(raw)
+    const store = createShoppingStore(() => storage)
+    expect(store.getState().storageIssue).toBe('invalid')
+    store.getState().toggleFavorite(createDemoLists()[0].items[0])
+    expect(storage.getItem(STORAGE_KEY)).toBe(raw)
   })
 })

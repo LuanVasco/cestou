@@ -1,7 +1,8 @@
 import { createStore } from 'zustand/vanilla'
 import { persist } from 'zustand/middleware'
 import { createDemoLists } from '../data/demo'
-import type { ShoppingList } from '../types'
+import { productKey } from '../lib/quickList'
+import type { GroceryItem, ShoppingList } from '../types'
 import { createListStorage, STORAGE_KEY, STORAGE_VERSION } from './storage'
 import type { BrowserStorage, StorageIssue } from './storage'
 import { isSavedLists } from './validation'
@@ -9,6 +10,8 @@ import type { SavedLists } from './validation'
 
 export interface ShoppingState {
   lists: ShoppingList[]
+  favorites: GroceryItem[]
+  toggleFavorite: (item: GroceryItem) => void
   storageIssue: StorageIssue
   addList: (list: ShoppingList) => void
   updateList: (id: string, update: (list: ShoppingList) => ShoppingList) => void
@@ -36,6 +39,26 @@ export function createShoppingStore(
     return persist<ShoppingState, [], [], SavedLists>(
       (persistedSet) => ({
         lists: createDemoLists(),
+        favorites: [],
+        toggleFavorite: (item) =>
+          persistedSet((state) => ({
+            favorites: state.favorites.some(
+              (favorite) => productKey(favorite) === productKey(item),
+            )
+              ? state.favorites.filter(
+                  (favorite) => productKey(favorite) !== productKey(item),
+                )
+              : [
+                  ...state.favorites,
+                  {
+                    ...item,
+                    estimatedPriceCents:
+                      item.paidPriceCents ?? item.estimatedPriceCents,
+                    purchased: false,
+                    paidPriceCents: null,
+                  },
+                ],
+          })),
         storageIssue: null,
         addList: (list) =>
           persistedSet((state) => ({ lists: [list, ...state.lists] })),
@@ -50,10 +73,16 @@ export function createShoppingStore(
         name: STORAGE_KEY,
         version: STORAGE_VERSION,
         storage,
-        partialize: (state) => ({ lists: state.lists }),
+        partialize: (state) => ({
+          lists: state.lists,
+          favorites: state.favorites,
+        }),
         merge: (saved, current) => ({
           ...current,
           lists: isSavedLists(saved) ? saved.lists : current.lists,
+          favorites: isSavedLists(saved)
+            ? (saved.favorites ?? [])
+            : current.favorites,
         }),
       },
     )(set, get, api)
@@ -64,7 +93,7 @@ export function createShoppingStore(
   setIssue(initialIssue)
   if (wasEmpty()) {
     storage.setItem(STORAGE_KEY, {
-      state: { lists: store.getState().lists },
+      state: { lists: store.getState().lists, favorites: [] },
       version: STORAGE_VERSION,
     })
   }

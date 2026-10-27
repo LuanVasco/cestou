@@ -55,7 +55,13 @@ export function createListStorage(
         return null
       }
       // Only domain data is hydrated; persisted values cannot replace actions.
-      return { state: { lists: parsed.state.lists }, version: STORAGE_VERSION }
+      return {
+        state: {
+          lists: parsed.state.lists,
+          favorites: parsed.state.favorites ?? [],
+        },
+        version: STORAGE_VERSION,
+      }
     },
     setItem(name, value) {
       // Preserve unreadable or incompatible records instead of overwriting them.

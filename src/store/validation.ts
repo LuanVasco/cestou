@@ -2,6 +2,7 @@ import type { GroceryItem, ShoppingList } from '../types'
 
 export interface SavedLists {
   lists: ShoppingList[]
+  favorites?: GroceryItem[]
 }
 
 export function isRecord(value: unknown): value is Record<string, unknown> {
@@ -73,6 +74,8 @@ function isList(value: unknown): value is ShoppingList {
 export function isSavedLists(value: unknown): value is SavedLists {
   return (
     isRecord(value) &&
+    (value.favorites === undefined ||
+      (Array.isArray(value.favorites) && value.favorites.every(isItem))) &&
     Array.isArray(value.lists) &&
     value.lists.every(isList) &&
     new Set(value.lists.map((list) => list.id)).size === value.lists.length

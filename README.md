@@ -8,7 +8,7 @@ Uma aplicação web para planejar compras de mercado e acompanhar o orçamento e
 
 ![Visão geral do Cestou](docs/preview-desktop.png)
 
-O MVP inclui três telas responsivas, salvamento automático com Zustand e localStorage e testes de interface com Playwright. Listas, produtos, preços, orçamentos e compras concluídas são recuperados ao atualizar ou reabrir a página no mesmo navegador.
+O MVP inclui três telas responsivas, salvamento automático com Zustand e localStorage e testes de interface com Playwright. Listas, produtos, favoritos, preços, orçamentos e compras concluídas são recuperados ao atualizar ou reabrir a página no mesmo navegador.
 
 ## Executar
 
@@ -26,7 +26,7 @@ Acesse `http://127.0.0.1:5173`.
 
 ```bash
 npm run typecheck # Verifica os tipos
-npm test          # Executa os testes automatizados de persistência
+npm test          # Executa os testes de persistência e inclusão rápida
 npm run test:watch # Executa os testes em modo de desenvolvimento
 npm run test:e2e   # Executa os testes de interface em desktop e celular
 npm run build     # Verifica os tipos e gera dist/
@@ -44,19 +44,25 @@ As rotas usam o fragmento da URL. O botão Voltar do navegador funciona, e a hos
 
 ## O que pode ser experimentado
 
-- Criar e duplicar listas.
+- Criar listas vazias ou a partir de modelos de compras da semana, café da manhã e limpeza.
+- Colar vários produtos, revisar nomes, quantidades e categorias e adicionar em lote.
+- Guardar favoritos e reutilizá-los em outras listas, mesmo após remover o produto original.
+- Duplicar listas e repetir compras concluídas com os produtos desmarcados e o preço anterior como estimativa.
 - Adicionar, editar e excluir produtos, com opção de desfazer a exclusão.
 - Confirmar o preço por unidade antes de colocar um produto no carrinho.
 - Desmarcar produtos e atualizar o orçamento em tempo real.
 - Alterar o orçamento e consultar uma previsão parcial quando há itens sem estimativa.
 - Finalizar uma compra e reutilizar a lista com os produtos desmarcados.
 
+A inclusão em lote aceita vírgula, ponto e vírgula ou quebra de linha, com quantidades como `2 leites` ou `2x leite`. Produtos repetidos no texto são agrupados; os já presentes na lista (mesmo nome normalizado e categoria) são ignorados, sem alterar o carrinho. Modelos não inventam preços. Favoritos guardam uma referência de preço no momento em que são marcados; confirme os valores ao comprar.
+
 Essas ações são salvas automaticamente no navegador. Diálogos, filtros e avisos temporários continuam sendo estado local da interface.
 
 ## Como os dados são salvos
 
-- O middleware `persist` do Zustand grava as listas na chave `cestou.shopping-lists`, com formato versionado (versão 1).
+- O middleware `persist` do Zustand grava as listas e os favoritos na chave `cestou.shopping-lists`, com formato versionado (versão 1).
 - O primeiro acesso cria e salva as listas de exemplo. Os acessos seguintes restauram os dados existentes, inclusive listas sem produtos e um conjunto vazio de listas.
+- Registros anteriores sem o campo de favoritos continuam válidos: as listas são preservadas e os favoritos começam vazios.
 - A leitura é síncrona: os dados salvos estão disponíveis antes da primeira renderização da interface.
 - Somente os dados de compras são persistidos. Ações do store, avisos e diálogos não são serializados.
 - O conteúdo recuperado é validado: tipos, quantidades, preços em centavos, datas, estados de compra e IDs únicos.
@@ -94,7 +100,7 @@ A interface inclui navegação por teclado, foco visível, link para pular ao co
 
 ## Verificação
 
-Os testes de persistência recriam o store usando o mesmo armazenamento para simular recarregamentos. Cobrem listas pessoais, produtos, preços, orçamento, conclusão, exclusão e restauração, listas vazias, registros corrompidos, versões incompatíveis, acesso bloqueado e falha de gravação. O armazenamento dos testes é isolado e não acessa os dados do navegador.
+Os testes de persistência recriam o store usando o mesmo armazenamento para simular recarregamentos. Cobrem listas pessoais, produtos, preços, orçamento, conclusão, exclusão e restauração, listas vazias, registros corrompidos, versões incompatíveis, acesso bloqueado e falha de gravação. Também verificam a compatibilidade com registros sem favoritos. Os testes de inclusão rápida cobrem separadores, agrupamento de repetições, cópias independentes dos modelos e entradas inválidas. O armazenamento dos testes é isolado e não acessa os dados do navegador.
 
 ### Testes de interface
 
@@ -105,7 +111,7 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-A suíte em `e2e/shopping.spec.ts` executa cinco cenários em dois projetos: Chromium desktop (1440 × 1000) e Chromium com emulação do Pixel 7. São dez execuções no total.
+A suíte em `e2e/shopping.spec.ts` executa cinco cenários em dois projetos: Chromium desktop (1440 × 1000) e Chromium com emulação do Pixel 7. A suíte `e2e/quick-list.spec.ts` acrescenta quatro cenários: modelos, inclusão em lote, favoritos e repetição de compras. São dezoito execuções no total.
 
 | Cenário                | O que verifica                                                                                                                           |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
