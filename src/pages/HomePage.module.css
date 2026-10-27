@@ -1,0 +1,140 @@
+.welcomeBanner {
+  position: relative;
+  overflow: hidden;
+  border-radius: 15px;
+  background: #eaf0d9;
+  min-height: 254px;
+  padding: 29px 34px 27px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.welcomeCopy {
+  position: relative;
+  z-index: 2;
+}
+.welcomeBanner h2 {
+  font-family: var(--serif);
+  font-size: 41px;
+  font-weight: 400;
+  letter-spacing: -0.7px;
+  line-height: 1.13;
+  margin: 14px 0 12px;
+  color: #36513b;
+}
+.welcomeBanner p {
+  font-size: 13px;
+  line-height: 1.8;
+  color: #656d57;
+}
+.bannerLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 13px;
+  font-size: 13px;
+  font-weight: 650;
+  margin-top: 18px;
+  border-bottom: 1px solid #98aa7b;
+  padding-bottom: 3px;
+}
+.bannerLink:hover {
+  gap: 18px;
+}
+.marketIllustration {
+  width: 345px;
+  max-width: 45%;
+  align-self: flex-end;
+  margin: -15px -4px -22px 0;
+  z-index: 1;
+}
+.bannerDecoration {
+  position: absolute;
+  width: 350px;
+  height: 350px;
+  right: -56px;
+  top: -70px;
+  border: 1px solid #dce5c7;
+  border-radius: 50%;
+}
+.bannerDecoration::after {
+  content: '';
+  position: absolute;
+  inset: 28px;
+  border: 1px solid #dce5c7;
+  border-radius: 50%;
+}
+
+@media (min-width: 1600px) {
+  .welcomeBanner {
+    min-height: 275px;
+  }
+  .welcomeBanner h2 {
+    font-size: 46px;
+  }
+  .marketIllustration {
+    width: 390px;
+    margin-bottom: -27px;
+  }
+}
+@media (max-width: 1000px) {
+  .welcomeBanner {
+    padding: 26px;
+  }
+  .welcomeBanner h2 {
+    font-size: 36px;
+  }
+  .welcomeBanner :global(.mini-label) {
+    font-size: 9px;
+  }
+  .marketIllustration {
+    max-width: 44%;
+    margin-right: -25px;
+  }
+}
+@media (max-width: 760px) {
+  .welcomeBanner {
+    min-height: 245px;
+  }
+  .welcomeBanner h2 {
+    font-size: 37px;
+  }
+  .marketIllustration {
+    max-width: 45%;
+    width: 280px;
+    margin-right: -12px;
+  }
+}
+@media (max-width: 520px) {
+  .welcomeBanner {
+    min-height: 254px;
+    padding: 24px;
+  }
+  .welcomeBanner h2 {
+    font-size: 35px;
+  }
+  .welcomeBanner :global(.mini-label) {
+    font-size: 8px;
+    letter-spacing: 1px;
+  }
+  .welcomeBanner p {
+    max-width: 185px;
+    font-size: 12px;
+  }
+  .marketIllustration {
+    position: absolute;
+    bottom: 1px;
+    right: -24px;
+    max-width: none;
+    width: 193px;
+    margin: 0;
+    opacity: 0.9;
+  }
+  .bannerDecoration {
+    right: -180px;
+    top: -130px;
+  }
+  .bannerLink {
+    font-size: 12px;
+    gap: 9px;
+  }
+}
